@@ -13,30 +13,30 @@ We have 3 connections on the rPi:
 I am not going to show you here how to setup your devices. Please do it before ([WiFi](https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md), LTE). This is not a step by step guide. I'll show you the relevant parts of my config files.
 
 `
-$cat /etc/network/interfaces
-
-
-#please use different subnet as your wlan0
-#eth0:
-auto eth0  
-iface eth0 inet static  
-	address 192.168.2.1
-	netmask 255.255.255.0
-
-#wlan0:
-allow-hotplug wlan0
-iface wlan0 inet manual
-    wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
-    metric 0  
-
-#wwan0:
-allow-hotplug wwan0
-iface wwan0 inet dhcp
-    metric 1000
-    pre-up /bin/sleep 10
-    pre-up /bin/echo -e "AT^NDISDUP=1,1,\"internet\"\r" > /dev/ttyUSB0
-    post-up /etc/wwan2lan.sh
-    post-down /bin/echo -ne 'AT^NDISDUP=1,0\r\n' > /dev/ttyUSB
+    $cat /etc/network/interfaces
+    
+    
+    #please use different subnet as your wlan0
+    #eth0:
+    auto eth0  
+    iface eth0 inet static  
+    	address 192.168.2.1
+    	netmask 255.255.255.0
+    
+    #wlan0:
+    allow-hotplug wlan0
+    iface wlan0 inet manual
+        wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+        metric 0  
+    
+    #wwan0:
+    allow-hotplug wwan0
+    iface wwan0 inet dhcp
+        metric 1000
+        pre-up /bin/sleep 10
+        pre-up /bin/echo -e "AT^NDISDUP=1,1,\"internet\"\r" > /dev/ttyUSB0
+        post-up /etc/wwan2lan.sh
+        post-down /bin/echo -ne 'AT^NDISDUP=1,0\r\n' > /dev/ttyUSB
 `    
 
 From wwan0 config you only need `metric 1000`, `post-up /etc/wwan2lan.sh` lines. Other commands are for setting up internet connection on my Huawei E3372.
