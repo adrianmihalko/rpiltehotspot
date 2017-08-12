@@ -48,11 +48,24 @@ Turn on NAT IPV4 forwarding in /etc/sysctl.conf:
     $cat /etc/sysctl.conf
     net.ipv4.ip_forward=1
 
-Setup internet connection sharing:
+Setup internet connection sharing in Iptables:
 
     sudo iptables -t nat -A POSTROUTING -o wwan0 -j MASQUERADE
 
-The following script makes the real deal:
+Configure it to load on reboot by first saving it to a file:
+
+    sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
+
+Then create a 'hook' file with a line to restore the ip tables :
+
+    sudo nano /lib/dhcpcd/dhcpcd-hooks/70-ipv4-nat
+
+Add:
+
+iptables-restore < /etc/iptables.ipv4.nat
+
+
+The following script makes the real deal, so it's important:
 
 /etc/wwan2lan.sh
 
