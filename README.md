@@ -12,9 +12,12 @@ We have 3 connections on the rPi:
 
 I am not going to show you here how to setup your devices. Please do it before ([WiFi](https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md), LTE). This is not a step by step guide. I'll show you the relevant parts of my config files.
 
-    $cat /etc/network/interfaces
-    
-    
+First, install dnsmasq package:
+
+    sudo apt-get install dnsmasq
+
+/etc/network/interfaces:
+        
     #please use different subnet as your wlan0
     #eth0:
     auto eth0  
@@ -36,11 +39,23 @@ I am not going to show you here how to setup your devices. Please do it before (
         pre-up /bin/echo -e "AT^NDISDUP=1,1,\"internet\"\r" > /dev/ttyUSB0
         post-up /etc/wwan2lan.sh
         post-down /bin/echo -ne 'AT^NDISDUP=1,0\r\n' > /dev/ttyUSB
-`    
+
 
 From wwan0 config you only need `metric 1000`, `post-up /etc/wwan2lan.sh` lines. Other commands are for setting up internet connection on my Huawei E3372.
 
-    $cat /etc/wwan2lan.sh
+Turn on NAT IPV4 forwarding in /etc/sysctl.conf:
+
+    $cat /etc/sysctl.conf
+    net.ipv4.ip_forward=1
+
+Setup internet connection sharing:
+
+    sudo iptables -t nat -A POSTROUTING -o wwan0 -j MASQUERADE
+
+The following script makes the real deal:
+
+/etc/wwan2lan.sh
+
     #!/bin/bash
    
     sleep 10
@@ -55,8 +70,7 @@ From wwan0 config you only need `metric 1000`, `post-up /etc/wwan2lan.sh` lines.
     
     LOCALGATEWAY=$(ip route show 0.0.0.0/0 dev $LOCALIF | cut -d\  -f3)
     WWANGATEWAY=$(ip route show 0.0.0.0/0 dev $WWANIF | cut -d\  -f3)
-    
-    
+     
     #local traffic gets one private default route:
     
     ip rule add iif lo priority 48000 table 2
@@ -76,7 +90,10 @@ From wwan0 config you only need `metric 1000`, `post-up /etc/wwan2lan.sh` lines.
     INETADDR=$(/sbin/ifconfig $WWANIF | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')
     ip rule add from $INETADDR/32 iif lo priority 47010 table 3
 
-    $ cat /etc/dnsmasq.conf
+Setup Dnsmasq, if you used different subnet for eth0, you must change it here as well:
+
+/etc/dnsmasq.conf
+
     interface=eth0      # Use interface eth0  
     listen-address=192.168.2.1 # Explicitly specify the address to listen on  
     #bind-interfaces      # Bind to the interface to make sure we aren't sending things elsewhere  
