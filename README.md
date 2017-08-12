@@ -43,9 +43,8 @@ First, install dnsmasq package:
 
 From wwan0 config you only need `metric 1000`, `post-up /etc/wwan2lan.sh` lines. Other commands are for setting up internet connection on my Huawei E3372.
 
-Turn on NAT IPV4 forwarding in /etc/sysctl.conf:
+Turn on NAT IPV4 forwarding. Add at the end of/etc/sysctl.conf:
 
-    $cat /etc/sysctl.conf
     net.ipv4.ip_forward=1
 
 Setup internet connection sharing in Iptables:
@@ -62,9 +61,8 @@ Then create a 'hook' file with a line to restore the ip tables :
 
 Add:
 
-iptables-restore < /etc/iptables.ipv4.nat
-
-
+    iptables-restore < /etc/iptables.ipv4.nat
+    
 The following script makes the real deal, so it's important:
 
 /etc/wwan2lan.sh
