@@ -12,7 +12,6 @@ We have 3 connections on the rPi:
 
 I am not going to show you here how to setup your devices. Please do it before ([WiFi](https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md), LTE). This is not a step by step guide. I'll show you the relevant parts of my config files.
 
-`
     $cat /etc/network/interfaces
     
     
@@ -40,3 +39,51 @@ I am not going to show you here how to setup your devices. Please do it before (
 `    
 
 From wwan0 config you only need `metric 1000`, `post-up /etc/wwan2lan.sh` lines. Other commands are for setting up internet connection on my Huawei E3372.
+
+    $cat /etc/wwan2lan.sh
+    #!/bin/bash
+   
+    sleep 10
+    
+    # define interfaces
+    
+    LOCALIF="wlan0"
+    WWANIF="wwan0"
+    LANIF="eth0"
+    
+    #get gateway IP address
+    
+    LOCALGATEWAY=$(ip route show 0.0.0.0/0 dev $LOCALIF | cut -d\  -f3)
+    WWANGATEWAY=$(ip route show 0.0.0.0/0 dev $WWANIF | cut -d\  -f3)
+    
+    
+    #local traffic gets one private default route:
+    
+    ip rule add iif lo priority 48000 table 2
+    ip route add default via $LOCALGATEWAY dev $LOCALIF table 2
+    
+    #eth0 traffic gets another private default route:
+    
+    ip rule add iif $LANIF priority 48010 table 3
+    ip route add default via $WWANGATEWAY dev $WWANIF table 3
+    
+    #delete shared gateways
+    
+    ip route delete default dev $LOCALIF
+    ip route delete default dev $WWANIF
+    
+    #enable wwan0 traffic from localhost if we specify the adapter (example: curl --interface wwan0 google.com)
+    INETADDR=$(/sbin/ifconfig $WWANIF | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')
+    ip rule add from $INETADDR/32 iif lo priority 47010 table 3
+
+    $ cat /etc/dnsmasq.conf
+    interface=eth0      # Use interface eth0  
+    listen-address=192.168.2.1 # Explicitly specify the address to listen on  
+    #bind-interfaces      # Bind to the interface to make sure we aren't sending things elsewhere  
+    #server=8.8.8.8       # Forward DNS requests to Google DNS  
+    domain-needed        # Don't forward short names  
+    #bogus-priv           # Never forward addresses in the non-routed address spaces.  
+    dhcp-range=192.168.2.1,192.168.2.50,12h # Assign IP addresses between 172.24.1.50 and 172.24.1.150 with a 12 hour lease time  
+    log-queries
+    
+    
