@@ -114,7 +114,7 @@ Setup Dnsmasq, if you used different subnet for eth0, you must change it here as
     dhcp-range=192.168.2.1,192.168.2.50,12h # Assign IP addresses between 172.24.1.50 and 172.24.1.150 with a 12 hour lease time  
     log-queries
     
-That's all. You are successfully shared LTE (wwan0) conenction to your LAN (eth0) port. You can also add check for monitoring internet connection and if it is needed, restart it:
+That's all. You are successfully shared LTE (wwan0) connection to your LAN (eth0) port. You can also add check for monitoring internet connection and if it is needed, restart it:
 
     #!/bin/bash
     # ping checker tool
