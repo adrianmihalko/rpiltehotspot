@@ -114,4 +114,42 @@ Setup Dnsmasq, if you used different subnet for eth0, you must change it here as
     dhcp-range=192.168.2.1,192.168.2.50,12h # Assign IP addresses between 172.24.1.50 and 172.24.1.150 with a 12 hour lease time  
     log-queries
     
+That's all. You are successfully shared LTE (wwan0) conenction to your LAN (eth0) port. You can also add check for monitoring internet connection and if it is needed, restart it:
+
+    #!/bin/bash
+    # ping checker tool
     
+    TMP_FILE="/tmp/ping_checker_tool.tmp"
+    if [ -r $TMP_FILE ]; then
+        FAILS=`cat $TMP_FILE`
+    else
+        FAILS=0
+    fi
+    SERVER="google.com"
+    INTERFACE="wwan0"
+    #IPADDRESS=$(ifconfig wwan0 | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}')
+    
+    curl --interface $INTERFACE --connect-timeout 15 $SERVER >/dev/null 2>&1
+    if [ $? -ne 0 ] ; then #if ping exits nonzero...
+        FAILS=$[FAILS + 1]
+    else
+        FAILS=0
+    fi
+    
+    if [ $FAILS -gt 2 ]; then
+        FAILS=0
+    	echo "wwan0 failed, going to restart interface..." >> /var/log/watchdog/watchdog.log
+    	/sbin/ifdown wwan0
+    	sleep 20
+    	/sbin/ifup wwan0
+    	sleep 20
+    	IPADDRESS=$(/sbin/ifconfig wwan0 | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}')
+    	echo "Time: $(date) - Server $SERVER is offline! IP is: $IPADDRESS" >> /var/log/watchdog/watchdog.log
+    fi
+    echo $FAILS > $TMP_FILE
+
+Language corrections are welcomed.
+
+p.s:
+I **LOVE** coffee! Buy me a coffee at:   
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=adriankoooo%40gmail%2ecom&lc=SK&item_name=Adrian%20Mihalko&currency_code=EUR&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted)
