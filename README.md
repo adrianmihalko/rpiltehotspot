@@ -38,7 +38,7 @@ First, install dnsmasq package:
         pre-up /bin/sleep 10
         pre-up /bin/echo -e "AT^NDISDUP=1,1,\"internet\"\r" > /dev/ttyUSB0
         post-up /etc/wwan2lan.sh
-        post-down /bin/echo -ne 'AT^NDISDUP=1,0\r\n' > /dev/ttyUSB
+        post-down /bin/echo -ne 'AT^NDISDUP=1,0\r\n' > /dev/ttyUSB0
 
 
 From wwan0 config you only need `metric 1000`, `post-up /etc/wwan2lan.sh` lines. Other commands are for setting up internet connection on my Huawei E3372.
@@ -111,7 +111,7 @@ Setup Dnsmasq, if you used different subnet for eth0, you must change it here as
     #server=8.8.8.8       # Forward DNS requests to Google DNS  
     domain-needed        # Don't forward short names  
     #bogus-priv           # Never forward addresses in the non-routed address spaces.  
-    dhcp-range=192.168.2.1,192.168.2.50,12h # Assign IP addresses between 172.24.1.50 and 172.24.1.150 with a 12 hour lease time  
+    dhcp-range=192.168.2.1,192.168.2.50,12h # Assign IP addresses between 192.168.2.1 and 293.168.2.50 with a 12 hour lease time  
     log-queries
     
 That's all. You are successfully shared LTE (wwan0) connection to your LAN (eth0) port. You can also add check for monitoring internet connection and if it is needed, restart it:
